@@ -1,0 +1,328 @@
+{
+  "info": {
+    "name": "Nepal Trekking API - TU BCA Project",
+    "description": "Complete API collection with algorithm demonstrations",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Algorithms",
+      "item": [
+        {
+          "name": "Search - Linear",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/algorithms/search/?type=linear&query=everest",
+              "host": ["{{base_url}}"],
+              "path": ["api", "algorithms", "search"],
+              "query": [
+                {"key": "type", "value": "linear"},
+                {"key": "query", "value": "everest"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search - Binary",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/algorithms/search/?type=binary&query=annapurna",
+              "host": ["{{base_url}}"],
+              "path": ["api", "algorithms", "search"],
+              "query": [
+                {"key": "type", "value": "binary"},
+                {"key": "query", "value": "annapurna"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sort - Merge Sort by Price",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/algorithms/sort/?type=merge&by=price&order=asc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "algorithms", "sort"],
+              "query": [
+                {"key": "type", "value": "merge"},
+                {"key": "by", "value": "price"},
+                {"key": "order", "value": "asc"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sort - Quick Sort by Rating",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/algorithms/sort/?type=quick&by=average_rating&order=desc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "algorithms", "sort"],
+              "query": [
+                {"key": "type", "value": "quick"},
+                {"key": "by", "value": "average_rating"},
+                {"key": "order", "value": "desc"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Greedy - Maximize Trips",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/algorithms/greedy/budget/?budget=200000&strategy=maximize_trips",
+              "host": ["{{base_url}}"],
+              "path": ["api", "algorithms", "greedy", "budget"],
+              "query": [
+                {"key": "budget", "value": "200000"},
+                {"key": "strategy", "value": "maximize_trips"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Greedy - Maximize Value",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/algorithms/greedy/budget/?budget=200000&strategy=maximize_value",
+              "host": ["{{base_url}}"],
+              "path": ["api", "algorithms", "greedy", "budget"],
+              "query": [
+                {"key": "budget", "value": "200000"},
+                {"key": "strategy", "value": "maximize_value"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "DP - Knapsack Planner",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/algorithms/dp/plan/?budget=150000&days=12&strategy=knapsack",
+              "host": ["{{base_url}}"],
+              "path": ["api", "algorithms", "dp", "plan"],
+              "query": [
+                {"key": "budget", "value": "150000"},
+                {"key": "days", "value": "12"},
+                {"key": "strategy", "value": "knapsack"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "DP - Maximize Destinations",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/algorithms/dp/plan/?budget=250000&days=15&strategy=maximize_destinations",
+              "host": ["{{base_url}}"],
+              "path": ["api", "algorithms", "dp", "plan"],
+              "query": [
+                {"key": "budget", "value": "250000"},
+                {"key": "days", "value": "15"},
+                {"key": "strategy", "value": "maximize_destinations"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Algorithm Info - Binary Search",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/algorithms/info/?name=binary_search",
+              "host": ["{{base_url}}"],
+              "path": ["api", "algorithms", "info"],
+              "query": [{"key": "name", "value": "binary_search"}]
+            }
+          }
+        },
+        {
+          "name": "Algorithm Info - List All",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/algorithms/info/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "algorithms", "info"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Graph Routes",
+      "item": [
+        {
+          "name": "BFS Traversal",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/routes/bfs/?start=Mount Everest Base Camp",
+              "host": ["{{base_url}}"],
+              "path": ["api", "routes", "bfs"],
+              "query": [{"key": "start", "value": "Mount Everest Base Camp"}]
+            }
+          }
+        },
+        {
+          "name": "DFS Traversal",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/routes/dfs/?start=Annapurna Circuit&end=Langtang Valley Trek",
+              "host": ["{{base_url}}"],
+              "path": ["api", "routes", "dfs"],
+              "query": [
+                {"key": "start", "value": "Annapurna Circuit"},
+                {"key": "end", "value": "Langtang Valley Trek"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Dijkstra Shortest Path",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/routes/shortest-path/?start=Mount Everest Base Camp&end=Langtang Valley Trek",
+              "host": ["{{base_url}}"],
+              "path": ["api", "routes", "shortest-path"],
+              "query": [
+                {"key": "start", "value": "Mount Everest Base Camp"},
+                {"key": "end", "value": "Langtang Valley Trek"}
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Recommendations",
+      "item": [
+        {
+          "name": "Rule-Based Recommendations",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"rule_based\",\n  \"preferences\": {\n    \"budget\": 150000,\n    \"max_days\": 12,\n    \"difficulty\": \"MODERATE\",\n    \"preferred_season\": \"Spring\",\n    \"min_rating\": 4.0\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/recommendations/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "recommendations"]
+            }
+          }
+        },
+        {
+          "name": "Content-Based Recommendations",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"content_based\",\n  \"liked_destination_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/recommendations/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "recommendations"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Destinations",
+      "item": [
+        {
+          "name": "List All Destinations",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/destinations/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "destinations"]
+            }
+          }
+        },
+        {
+          "name": "Get Destination Details",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/destinations/1/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "destinations", "1"]
+            }
+          }
+        },
+        {
+          "name": "Search Destinations",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/destinations/?search=everest",
+              "host": ["{{base_url}}"],
+              "path": ["api", "destinations"],
+              "query": [{"key": "search", "value": "everest"}]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"test@example.com\",\n  \"password\": \"testpass123\",\n  \"password2\": \"testpass123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"testpass123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    }
+  ]
+}

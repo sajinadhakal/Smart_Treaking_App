@@ -4,7 +4,7 @@ class ApiConfig {
   static const String _apiBaseUrlOverride =
       String.fromEnvironment('API_BASE_URL');
   static const String _localWebBaseUrl = 'http://127.0.0.1:8000/api';
-  static const String _deviceLocalIp = '192.168.1.9';
+  static const String _deviceLocalIp = '127.0.0.1';
   static const String _androidEmulatorBaseUrl = 'http://10.0.2.2:8000/api';
   static const bool _forceLanForAndroid = bool.fromEnvironment(
     'FORCE_LAN_FOR_ANDROID',

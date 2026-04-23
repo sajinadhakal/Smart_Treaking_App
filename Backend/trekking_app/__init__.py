@@ -1,0 +1,3 @@
+"""
+Trekking App - Django Backend
+"""

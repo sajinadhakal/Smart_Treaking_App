@@ -25,43 +25,31 @@ function Get-PythonExecutable {
 }
 
 function Get-LanIp {
-    $ipLine = ipconfig |
-        Select-String -Pattern 'IPv4[^:]*:\s*(\d+\.\d+\.\d+\.\d+)' |
+    if (Get-Command Get-NetIPAddress -ErrorAction SilentlyContinue) {
+        $ip = Get-NetIPAddress -AddressFamily IPv4 |
+            Where-Object { $_.IPAddress -notmatch '^(127|169)\.' } |
+            Select-Object -First 1 -ExpandProperty IPAddress
+        if ($ip) {
+            return $ip
+        }
+    }
+
+    $ip = ipconfig |
+        Select-String -Pattern '\d{1,3}(?:\.\d{1,3}){3}' |
+        ForEach-Object { $_.Matches } |
+        ForEach-Object { $_.Value } |
+        Where-Object { $_ -notmatch '^(127|169)\.' } |
         Select-Object -First 1
 
-    if ($ipLine -and $ipLine.Matches.Count -gt 0) {
-        return $ipLine.Matches[0].Groups[1].Value
+    if ($ip) {
+        return $ip
     }
 
     return "127.0.0.1"
 }
 
-function Sync-FrontendApiIp {
-    param(
-        [string]$ipAddress
-    )
-
-    $apiConfigPath = Join-Path $workspaceRoot "front_end\lib\config\api_config.dart"
-    if (-not (Test-Path $apiConfigPath)) {
-        return
-    }
-
-    $content = Get-Content $apiConfigPath -Raw
-    $updated = [regex]::Replace(
-        $content,
-        "static const String _deviceLocalIp = '[^']+';",
-        "static const String _deviceLocalIp = '$ipAddress';"
-    )
-
-    if ($updated -ne $content) {
-        Set-Content -Path $apiConfigPath -Value $updated -NoNewline
-        Write-Host "Synced Flutter API IP to $ipAddress in front_end/lib/config/api_config.dart" -ForegroundColor DarkGray
-    }
-}
-
 $pythonExe = Get-PythonExecutable
 $currentIP = Get-LanIp
-Sync-FrontendApiIp -ipAddress $currentIP
 
 # Navigate to backend
 Set-Location Backend

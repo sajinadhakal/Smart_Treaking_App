@@ -4,8 +4,12 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
 import '../models/user.dart';
+import '../mock_data/mock_users.dart';
 
 class AuthService {
+  // ✅ MOCK MODE: Set to true to disconnect backend and use mock data
+  static const bool useMockData = true;
+
   static const String _tokenKey = 'auth_token';
   static const String _refreshTokenKey = 'refresh_token';
   static const String _userKey = 'user_data';
@@ -96,6 +100,25 @@ class AuthService {
     String contactNumber = '',
     String gender = 'OTHER',
   }) async {
+    // ✅ MOCK MODE: Create mock user for any credentials
+    if (useMockData) {
+      final newMockUser = User(
+        id: DateTime.now().millisecondsSinceEpoch,
+        username: username,
+        email: email,
+        firstName: firstName.isNotEmpty ? firstName : 'User',
+        lastName: lastName.isNotEmpty ? lastName : 'Demo',
+        fullNameValue: fullName.isNotEmpty ? fullName : '$firstName Demo',
+        address: address,
+        contactNumber: contactNumber,
+        gender: gender,
+      );
+      await saveToken('mock_token_${username}_${DateTime.now().millisecondsSinceEpoch}');
+      await saveRefreshToken('mock_refresh_token');
+      await saveUser(newMockUser);
+      return {'success': true, 'user': newMockUser};
+    }
+
     try {
       final response = await http
           .post(
@@ -195,6 +218,17 @@ class AuthService {
     required String username,
     required String password,
   }) async {
+    // ✅ MOCK MODE: Return mock user for any credentials
+    if (useMockData) {
+      final mockUser = username.toLowerCase() == 'sajina'
+          ? MockUsers.testUser2
+          : MockUsers.testUser;
+      await saveToken('mock_token_${username}_${DateTime.now().millisecondsSinceEpoch}');
+      await saveRefreshToken('mock_refresh_token');
+      await saveUser(mockUser);
+      return {'success': true, 'user': mockUser};
+    }
+
     try {
       final response = await http
           .post(

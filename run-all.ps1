@@ -24,12 +24,24 @@ function Get-PythonExecutable {
 }
 
 function Get-LanIp {
-    $ipLine = ipconfig |
-        Select-String -Pattern 'IPv4[^:]*:\s*(\d+\.\d+\.\d+\.\d+)' |
+    if (Get-Command Get-NetIPAddress -ErrorAction SilentlyContinue) {
+        $ip = Get-NetIPAddress -AddressFamily IPv4 |
+            Where-Object { $_.IPAddress -notmatch '^(127|169)\.' } |
+            Select-Object -First 1 -ExpandProperty IPAddress
+        if ($ip) {
+            return $ip
+        }
+    }
+
+    $ip = ipconfig |
+        Select-String -Pattern '\d{1,3}(?:\.\d{1,3}){3}' |
+        ForEach-Object { $_.Matches } |
+        ForEach-Object { $_.Value } |
+        Where-Object { $_ -notmatch '^(127|169)\.' } |
         Select-Object -First 1
 
-    if ($ipLine -and $ipLine.Matches.Count -gt 0) {
-        return $ipLine.Matches[0].Groups[1].Value
+    if ($ip) {
+        return $ip
     }
 
     return '127.0.0.1'
@@ -169,45 +181,8 @@ Write-Host "   ✓ Device(s) found!" -ForegroundColor Green
 Write-Host ""
 Write-Host "3. Starting Flutter App..." -ForegroundColor Green
 
-$frontendScript = @"
-Set-Location '$PWD\front_end'
-`$Host.UI.RawUI.WindowTitle = 'Flutter App - Nepal Trekking App'
-function Get-LanIp {
-    `$ipLine = ipconfig |
-        Select-String -Pattern 'IPv4[^:]*:\s*(\d+\.\d+\.\d+\.\d+)' |
-        Select-Object -First 1
-
-    if (`$ipLine -and `$ipLine.Matches.Count -gt 0) {
-        return `$ipLine.Matches[0].Groups[1].Value
-    }
-
-    return '127.0.0.1'
-}
-
-`$lanIp = Get-LanIp
-`$apiBaseUrl = "http://`${lanIp}:8000/api"
-
-Write-Host ''
-Write-Host '=================================' -ForegroundColor Cyan
-Write-Host ' Flutter App Running' -ForegroundColor Green
-Write-Host '=================================' -ForegroundColor Cyan
-Write-Host ''
-Write-Host "Connected to: `$apiBaseUrl" -ForegroundColor Green
-Write-Host ''
-Write-Host 'Controls:' -ForegroundColor Yellow
-Write-Host '  r - Hot reload' -ForegroundColor White
-Write-Host '  R - Hot restart' -ForegroundColor White
-Write-Host '  q - Quit' -ForegroundColor White
-Write-Host '=================================' -ForegroundColor Cyan
-Write-Host ''
-flutter run --dart-define "API_BASE_URL=`$apiBaseUrl"
-"@
-
-$frontendScriptFile = "front_end\run-app.ps1"
-$frontendScript | Out-File -FilePath $frontendScriptFile -Encoding UTF8
-
-Set-Location ..
-Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-File", "$PWD\$frontendScriptFile"
+$frontendScriptFile = Join-Path $PWD "front_end\run-app.ps1"
+Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-File", $frontendScriptFile
 Write-Host "   ✓ Flutter app starting..." -ForegroundColor Green
 
 Write-Host ""

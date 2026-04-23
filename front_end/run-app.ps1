@@ -1,31 +1,37 @@
-﻿Set-Location 'C:\Users\sazna\6th_sem\front_end'
+﻿Set-Location $PSScriptRoot
 $Host.UI.RawUI.WindowTitle = 'Flutter App - Nepal Trekking App'
 
 function Get-LanIp {
-	$ipLine = ipconfig |
-		Select-String -Pattern 'IPv4[^:]*:\s*(\d+\.\d+\.\d+\.\d+)' |
-		Select-Object -First 1
+    if (Get-Command Get-NetIPAddress -ErrorAction SilentlyContinue) {
+        $ip = Get-NetIPAddress -AddressFamily IPv4 |
+            Where-Object { $_.IPAddress -notmatch '^(127|169)\.' } |
+            Select-Object -First 1 -ExpandProperty IPAddress
+        if ($ip) {
+            return $ip
+        }
+    }
 
-	if ($ipLine -and $ipLine.Matches.Count -gt 0) {
-		return $ipLine.Matches[0].Groups[1].Value
-	}
+    $ip = ipconfig |
+        Select-String -Pattern '\d{1,3}(?:\.\d{1,3}){3}' |
+        ForEach-Object { $_.Matches } |
+        ForEach-Object { $_.Value } |
+        Where-Object { $_ -notmatch '^(127|169)\.' } |
+        Select-Object -First 1
 
-	return '127.0.0.1'
+    if ($ip) {
+        return $ip
+    }
+
+    return '127.0.0.1'
 }
 
 $lanIp = Get-LanIp
-$apiBaseUrl = $env:API_BASE_URL
-
-if ([string]::IsNullOrWhiteSpace($apiBaseUrl)) {
-	$apiBaseUrl = "http://${lanIp}:8000/api"
-}
+$apiBaseUrl = if ([string]::IsNullOrWhiteSpace($env:API_BASE_URL)) { "http://${lanIp}:8000/api" } else { $env:API_BASE_URL }
 
 Write-Host ''
 Write-Host '=================================' -ForegroundColor Cyan
 Write-Host ' Flutter App Running' -ForegroundColor Green
 Write-Host '=================================' -ForegroundColor Cyan
-Write-Host ''
-Write-Host "Connected backend: $apiBaseUrl" -ForegroundColor Green
-Write-Host "Detected LAN IP: $lanIp" -ForegroundColor Green
+Write-Host "API_BASE_URL = $apiBaseUrl" -ForegroundColor Green
 Write-Host ''
 flutter run --dart-define "API_BASE_URL=$apiBaseUrl"
