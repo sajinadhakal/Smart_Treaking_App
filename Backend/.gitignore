@@ -2,6 +2,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+
+# Python build
 .Python
 build/
 develop-eggs/
@@ -19,7 +21,7 @@ wheels/
 .installed.cfg
 *.egg
 
-# Django stuff:
+# Django
 *.log
 local_settings.py
 db.sqlite3
@@ -29,12 +31,15 @@ staticfiles/
 
 # Environment
 .env
+.env.*
 venv/
 env/
 ENV/
+Backend/venv/
 
 # IDE
 .vscode/
 .idea/
 *.swp
+*.swo
 *.swo
