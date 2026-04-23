@@ -31,7 +31,7 @@ class ReviewService {
       }
 
       final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}api/auth/token/refresh/'),
+        Uri.parse('${ApiConfig.baseUrl}/auth/token/refresh/'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'refresh': refreshToken}),
       );
@@ -94,12 +94,17 @@ class ReviewService {
     File? imageFile,
   }) async {
     var token = await _getToken();
-    if (token == null || token.isEmpty) {
-      throw Exception('Please log in to share your experience.');
+    
+    // Debug: Check if token exists
+    if (token == null || token.trim().isEmpty) {
+      throw Exception('Authentication required. Please login first to share your experience.');
     }
-
+    
+    print('[ReviewService] Using token: ${token.substring(0, 20)}...');
+    
     final request = http.MultipartRequest('POST', Uri.parse(ApiConfig.reviews));
     request.headers['Authorization'] = 'Bearer $token';
+    request.headers['Accept'] = 'application/json';
     request.fields['destination'] = destinationId.toString();
     request.fields['rating'] = rating.toString();
     request.fields['comment'] = comment;
@@ -113,11 +118,14 @@ class ReviewService {
 
     // If 401, try to refresh token and retry
     if (streamedResponse.statusCode == 401) {
+      print('[ReviewService] Got 401, attempting token refresh...');
       final refreshed = await _refreshAccessToken();
       if (refreshed) {
         token = await _getToken();
+        print('[ReviewService] Token refreshed, retrying...');
         final retryRequest = http.MultipartRequest('POST', Uri.parse(ApiConfig.reviews));
         retryRequest.headers['Authorization'] = 'Bearer $token';
+        retryRequest.headers['Accept'] = 'application/json';
         retryRequest.fields['destination'] = destinationId.toString();
         retryRequest.fields['rating'] = rating.toString();
         retryRequest.fields['comment'] = comment;
@@ -128,10 +136,13 @@ class ReviewService {
 
         streamedResponse = await retryRequest.send();
         responseBody = await streamedResponse.stream.bytesToString();
+      } else {
+        print('[ReviewService] Token refresh failed');
       }
     }
 
     if (streamedResponse.statusCode != 201) {
+      print('[ReviewService] Error response: ${streamedResponse.statusCode} - $responseBody');
       throw Exception('Failed to create review: ${streamedResponse.statusCode} $responseBody');
     }
 

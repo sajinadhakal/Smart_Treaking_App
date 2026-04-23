@@ -8,7 +8,7 @@ import '../mock_data/mock_users.dart';
 
 class AuthService {
   // ✅ MOCK MODE: Set to true to disconnect backend and use mock data
-  static const bool useMockData = true;
+  static const bool useMockData = false;
 
   static const String _tokenKey = 'auth_token';
   static const String _refreshTokenKey = 'refresh_token';
@@ -154,12 +154,35 @@ class AuthService {
             'error': 'Server returned an invalid response format.'
           };
         }
-        await saveToken(data['token']);
-        if (data['refresh'] != null) {
-          await saveRefreshToken(data['refresh']);
+        
+        // CRITICAL: Extract and save tokens FIRST
+        final accessToken = data['access'] ?? data['token'];
+        final refreshToken = data['refresh'];
+        
+        if (accessToken == null || accessToken.toString().isEmpty) {
+          return {
+            'success': false,
+            'error': 'Server did not return a valid token.'
+          };
         }
-        await saveUser(User.fromJson(data['user']));
-        return {'success': true, 'user': User.fromJson(data['user'])};
+        
+        // Save tokens immediately
+        await saveToken(accessToken.toString());
+        if (refreshToken != null && refreshToken.toString().isNotEmpty) {
+          await saveRefreshToken(refreshToken.toString());
+        }
+        
+        // Try to save user data, but don't fail if it's not present
+        try {
+          final userData = data['user'];
+          if (userData != null) {
+            await saveUser(User.fromJson(userData));
+          }
+        } catch (e) {
+          print('Warning: Could not parse user data: $e');
+        }
+        
+        return {'success': true, 'message': 'Registration successful'};
       } else {
         final error = _tryDecodeJson(response.body) ?? response.body;
         return {'success': false, 'error': _extractApiError(error)};
@@ -256,12 +279,35 @@ class AuthService {
             'error': 'Server returned an invalid response format.'
           };
         }
-        await saveToken(data['token']);
-        if (data['refresh'] != null) {
-          await saveRefreshToken(data['refresh']);
+        
+        // CRITICAL: Extract and save tokens FIRST
+        final accessToken = data['access'] ?? data['token'];
+        final refreshToken = data['refresh'];
+        
+        if (accessToken == null || accessToken.toString().isEmpty) {
+          return {
+            'success': false,
+            'error': 'Server did not return a valid token.'
+          };
         }
-        await saveUser(User.fromJson(data['user']));
-        return {'success': true, 'user': User.fromJson(data['user'])};
+        
+        // Save tokens immediately
+        await saveToken(accessToken.toString());
+        if (refreshToken != null && refreshToken.toString().isNotEmpty) {
+          await saveRefreshToken(refreshToken.toString());
+        }
+        
+        // Try to save user data, but don't fail if it's not present
+        try {
+          final userData = data['user'];
+          if (userData != null) {
+            await saveUser(User.fromJson(userData));
+          }
+        } catch (e) {
+          print('Warning: Could not parse user data: $e');
+        }
+        
+        return {'success': true, 'message': 'Login successful'};
       } else {
         final error = _tryDecodeJson(response.body) ?? response.body;
         return {'success': false, 'error': _extractApiError(error)};
@@ -317,23 +363,52 @@ class AuthService {
           'Accept': 'application/json',
         },
         body: jsonEncode({'email': email.trim()}),
+      ).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () => http.Response(
+          jsonEncode({'error': 'Request timed out. Backend may be offline.'}),
+          408,
+        ),
       );
 
       final data = _tryDecodeJson(response.body);
       if (response.statusCode == 200 && data is Map<String, dynamic>) {
         return {
           'success': true,
-          'message': data['message'] ?? 'OTP sent successfully.'
+          'message': data['message'] ?? 'OTP sent successfully to $email'
         };
       }
+      
+      // Better error handling
+      if (response.statusCode == 404) {
+        return {
+          'success': false,
+          'error': 'Email not found. Please check and try again.'
+        };
+      }
+      if (response.statusCode == 500) {
+        return {
+          'success': false,
+          'error': 'Server error. Please try again later. Backend: ${ApiConfig.forgotPassword}'
+        };
+      }
+      
       return {
         'success': false,
         'error': data is Map<String, dynamic>
-            ? data['error'] ?? 'Failed to send OTP.'
-            : 'Invalid server response: ${response.body}'
+            ? data['error'] ?? 'Failed to send OTP (HTTP ${response.statusCode})'
+            : 'Invalid server response: ${response.body.substring(0, 100)}'
+      };
+    } on SocketException catch (e) {
+      return {
+        'success': false,
+        'error': 'Cannot reach backend server. Check that:\n1. Backend is running (run-backend.ps1)\n2. Phone is on same WiFi as laptop\n3. Firewall allows connections\n\nError: $e'
       };
     } catch (e) {
-      return {'success': false, 'error': 'Network error: $e'};
+      return {
+        'success': false,
+        'error': 'Network error: $e. Backend URL: ${ApiConfig.forgotPassword}'
+      };
     }
   }
 
@@ -352,6 +427,12 @@ class AuthService {
           'email': email.trim(),
           'otp': otpCode.trim(),
         }),
+      ).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () => http.Response(
+          jsonEncode({'error': 'Request timed out. Backend may be offline.'}),
+          408,
+        ),
       );
 
       final data = _tryDecodeJson(response.body);
@@ -361,11 +442,33 @@ class AuthService {
           'message': data['message'] ?? 'OTP verified successfully.'
         };
       }
+      
+      // Better error handling
+      if (response.statusCode == 400) {
+        return {
+          'success': false,
+          'error': data is Map<String, dynamic>
+              ? data['error'] ?? 'Invalid or expired OTP. Please request a new one.'
+              : 'Invalid or expired OTP.'
+        };
+      }
+      if (response.statusCode == 404) {
+        return {
+          'success': false,
+          'error': 'Email not found.'
+        };
+      }
+      
       return {
         'success': false,
         'error': data is Map<String, dynamic>
-            ? data['error'] ?? 'Failed to verify OTP.'
-            : 'Invalid server response: ${response.body}'
+            ? data['error'] ?? 'Failed to verify OTP (HTTP ${response.statusCode})'
+            : 'Invalid server response: ${response.body.substring(0, 100)}'
+      };
+    } on SocketException catch (e) {
+      return {
+        'success': false,
+        'error': 'Cannot reach backend server. Check network connection. Error: $e'
       };
     } catch (e) {
       return {'success': false, 'error': 'Network error: $e'};
@@ -387,6 +490,12 @@ class AuthService {
           'email': email.trim(),
           'new_password': newPassword,
         }),
+      ).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () => http.Response(
+          jsonEncode({'error': 'Request timed out. Backend may be offline.'}),
+          408,
+        ),
       );
 
       final data = _tryDecodeJson(response.body);

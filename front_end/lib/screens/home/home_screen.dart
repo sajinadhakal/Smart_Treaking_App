@@ -32,20 +32,13 @@ class _HomeScreenState extends State<HomeScreen> {
   User? _currentUser;
   List<Destination> _featuredDestinations = [];
   List<Destination> _masterDestinations = [];
-  List<Destination> _visibleDestinations = [];
-  List<Destination> _allDestinations = [];
+
   List<Destination> _recentDestinations = [];
   List<AppNotification> _notifications = [];
   int _unreadCount = 0;
   bool _isLoading = true;
   bool _showRecentSection = false;
   Timer? _recentSectionTimer;
-  final TextEditingController _searchController = TextEditingController();
-  
-  // Filter states
-  String? _selectedDifficulty;
-  double? _minRating;
-  bool _showFilters = false;
 
   @override
   void initState() {
@@ -59,7 +52,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _recentSectionTimer?.cancel();
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -71,7 +63,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _masterDestinations = await _destinationService.getDestinations();
     _recentDestinations = await _destinationService.getDestinations(ordering: '-created_at');
     _recentDestinations = _recentDestinations.take(5).toList();
-    _applyFilters();
     _startRecentSectionTimer();
     if (mounted) {
       await context.read<ReviewProvider>().loadTopReviews();
@@ -86,57 +77,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     
     setState(() => _isLoading = false);
-  }
-
-  Future<void> _searchDestinations(String query) async {
-    _applyFilters();
-  }
-
-  void _applyFilters() {
-    final query = _searchController.text.trim().toLowerCase();
-    List<Destination> filtered = [..._masterDestinations];
-
-    if (query.isNotEmpty) {
-      filtered = filtered.where((d) {
-        final searchable = '${d.name} ${d.location} ${d.description}'.toLowerCase();
-        return searchable.contains(query);
-      }).toList();
-    }
-
-    if (_selectedDifficulty != null) {
-      final selected = _selectedDifficulty!.toUpperCase();
-      filtered = filtered.where((d) {
-        final level = d.difficultyLevel.toUpperCase();
-        if (selected == 'EASY') {
-          return level == 'EASY';
-        }
-        if (selected == 'MODERATE') {
-          return level == 'MODERATE';
-        }
-        if (selected == 'HARD') {
-          return level == 'CHALLENGING' || level == 'DIFFICULT';
-        }
-        return d.difficulty.toUpperCase() == selected || level == selected;
-      }).toList();
-    }
-
-    if (_minRating != null && _minRating! > 0) {
-      filtered = filtered.where((d) => (d.averageRating ?? 0) >= _minRating!).toList();
-    }
-
-    setState(() {
-      _visibleDestinations = filtered;
-      _allDestinations = filtered;
-    });
-  }
-
-  void _resetFilters() {
-    setState(() {
-      _selectedDifficulty = null;
-      _minRating = null;
-      _searchController.clear();
-    });
-    _applyFilters();
   }
 
   void _startRecentSectionTimer() {
@@ -303,11 +243,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final reviewProvider = context.watch<ReviewProvider>();
-    final activeFiltersCount = [
-      if (_selectedDifficulty != null) 1,
-      if (_minRating != null) 1,
-      if (_searchController.text.trim().isNotEmpty) 1,
-    ].length;
 
     return Scaffold(
       appBar: widget.showAppBar ? AppBar(
@@ -346,115 +281,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-
-                    // Search Bar and Filters
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: _searchController,
-                                  decoration: InputDecoration(
-                                    hintText: 'Search destinations...',
-                                    prefixIcon: const Icon(Icons.search),
-                                    suffixIcon: _searchController.text.isNotEmpty
-                                        ? IconButton(
-                                            icon: const Icon(Icons.clear),
-                                            onPressed: () {
-                                              _searchController.clear();
-                                              _applyFilters();
-                                            },
-                                          )
-                                        : null,
-                                  ),
-                                  onChanged: _searchDestinations,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              IconButton(
-                                icon: Badge(
-                                  label: activeFiltersCount > 0
-                                      ? Text('$activeFiltersCount')
-                                      : null,
-                                  child: const Icon(Icons.filter_list),
-                                ),
-                                onPressed: () {
-                                  setState(() => _showFilters = !_showFilters);
-                                },
-                              ),
-                            ],
-                          ),
-                          if (_showFilters)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Difficulty Level',
-                                    style: TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  Wrap(
-                                    spacing: 8,
-                                    children: const ['Easy', 'Medium', 'Hard']
-                                        .map((diff) {
-                                      final mappedValue = diff
-                                          .toUpperCase()
-                                          .replaceAll('MEDIUM', 'MODERATE');
-                                      return FilterChip(
-                                        label: Text(diff),
-                                        selected:
-                                            _selectedDifficulty == mappedValue,
-                                        onSelected: (selected) {
-                                          setState(() {
-                                            _selectedDifficulty =
-                                                selected ? mappedValue : null;
-                                          });
-                                          _applyFilters();
-                                        },
-                                      );
-                                    }).toList(),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  const Text(
-                                    'Minimum Rating',
-                                    style: TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  Wrap(
-                                    spacing: 8,
-                                    children: [3.0, 3.5, 4.0, 4.5].map((rating) {
-                                      return FilterChip(
-                                        label: Text('$rating★'),
-                                        selected: _minRating == rating,
-                                        onSelected: (selected) {
-                                          setState(() {
-                                            _minRating = selected ? rating : null;
-                                          });
-                                          _applyFilters();
-                                        },
-                                      );
-                                    }).toList(),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: TextButton.icon(
-                                      onPressed: _resetFilters,
-                                      icon: const Icon(Icons.refresh),
-                                      label: const Text('Reset Filters'),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-
-                    // Featured Destinations
                     if (_featuredDestinations.isNotEmpty) ...[
                       const SizedBox(height: 16),
                       Padding(
@@ -529,7 +355,7 @@ class _HomeScreenState extends State<HomeScreen> {
             MaterialPageRoute(
               builder: (_) => DestinationReviewsScreen(
                 destination: destination,
-                allDestinations: _allDestinations,
+                allDestinations: _masterDestinations,
               ),
             ),
           );
@@ -645,7 +471,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final edited = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => ReviewFormScreen(
-          destinations: _allDestinations,
+          destinations: _masterDestinations,
           editingReview: review,
         ),
       ),

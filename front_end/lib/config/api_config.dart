@@ -1,10 +1,11 @@
 import 'package:flutter/foundation.dart';
 
 class ApiConfig {
+  // 🔧 IMPORTANT: Set API_BASE_URL via run-app.ps1 which auto-detects your laptop's LAN IP
+  // Example: API_BASE_URL='http://192.168.1.8:8000/api'
   static const String _apiBaseUrlOverride =
       String.fromEnvironment('API_BASE_URL');
   static const String _localWebBaseUrl = 'http://127.0.0.1:8000/api';
-  static const String _deviceLocalIp = '127.0.0.1';
   static const String _androidEmulatorBaseUrl = 'http://10.0.2.2:8000/api';
   static const bool _forceLanForAndroid = bool.fromEnvironment(
     'FORCE_LAN_FOR_ANDROID',
@@ -15,7 +16,8 @@ class ApiConfig {
     defaultValue: false,
   );
 
-  static String get _deviceBaseUrl => 'http://$_deviceLocalIp:8000/api';
+  // Fallback to localhost if no env variable (for web/emulator)
+  static String get _deviceBaseUrl => 'http://127.0.0.1:8000/api';
 
   static String get _lanBaseUrl =>
       _apiBaseUrlOverride.isNotEmpty ? _apiBaseUrlOverride : _deviceBaseUrl;
